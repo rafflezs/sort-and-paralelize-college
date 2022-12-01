@@ -3,20 +3,28 @@
 class SelectSerial
 {
 public:
-    FileManager *m_file_manager;
+    FileManager *m_file_manager{nullptr};
+
+    SelectSerial();
+    ~SelectSerial();
+
     void sort();
-    void swap(int *xp, int *yp);
-    void selection_sort(std::vector<int>* arr, int n);
+    void swap(int *a, int *b);
+    void selection_sort(int *arr, int n);
 };
 
-void SelectSerial::swap(int *xp, int *yp)
+SelectSerial::SelectSerial()
 {
-    int temp = *xp;
-    *xp = *yp;
-    *yp = temp;
+    std::cout << "Gerando arquivo" << std::endl;
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-seelct-serial.txt");
 }
 
-void SelectSerial::selection_sort(std::vector<int>* arr, int n)
+SelectSerial::~SelectSerial()
+{
+    delete m_file_manager;
+}
+
+void SelectSerial::selection_sort(int *arr, int n)
 {
     int i, j, min_idx;
 
@@ -32,10 +40,25 @@ void SelectSerial::selection_sort(std::vector<int>* arr, int n)
     }
 }
 
+void SelectSerial::swap(int *a, int *b)
+{
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
 void SelectSerial::sort()
 {
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-seelct-serial.txt");
-    auto arr_size = m_file_manager->m_to_sort.size;
-    selection_sort(*(m_file_manager->m_to_sort.m_arr), arr_size);
-    delete m_file_manager;
+
+    std::cout << "Iniciando ordenação - Select Sort" << std::endl;
+
+    m_file_manager->print_array();
+
+    int* arr = m_file_manager->m_arr;
+
+    selection_sort(arr, m_file_manager->m_vec.size());
+
+    m_file_manager->m_arr = arr;
+
+    m_file_manager->print_array();
 }

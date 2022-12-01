@@ -12,6 +12,7 @@ int main()
 
     auto ss = new SelectSerial();
     ss->sort();
+    delete ss;
 
     // auto ms = new MergeSerial();
     // ms->sort();
