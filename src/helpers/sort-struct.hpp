@@ -1,7 +1,9 @@
-typedef struct sort
+#include <vector>
+
+typedef struct sort_struct
 {
 
-    int *m_arr{nullptr};
+    std::vector <int> m_arr{};
     int size{0};
 
-}Sort;
+}SortStruct;

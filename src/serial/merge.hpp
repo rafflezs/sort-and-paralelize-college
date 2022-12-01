@@ -1,21 +1,78 @@
 #include "../helpers/file-manager.hpp"
-#include <iostream>
 
 class MergeSerial
 {
-private:
-    int *m_arr;
-    std::string m_arquivo{"merge-serial.txt"};
 public:
-
-    MergeSerial(FileManager* in_file);
-
-    int *get_arr();
-    void *set_arr();
-
-    std::string to_file();
-
-    void merge(int const left, int const mid, int const right);
-    void merge_sort(int const begin, int const end);
-    void print();
+    FileManager *m_file_manager;
+    void sort();
+    void merge(std::vector<int> array, int const left, int const mid, int const right);
+    void merge_sort(std::vector<int> array, int const begin, int const end);
 };
+
+void MergeSerial::merge(std::vector<int> array, int const left, int const mid, int const right)
+{
+    auto const sub_arr_left = mid - left + 1;
+    auto const sub_arr_right = right - mid;
+
+    auto *leftArray = new int[sub_arr_left],
+         *rightArray = new int[sub_arr_right];
+
+    for (auto i = 0; i < sub_arr_left; i++)
+        leftArray[i] = array[left + i];
+    for (auto j = 0; j < sub_arr_right; j++)
+        rightArray[j] = array[mid + 1 + j];
+
+    auto index_fsub_arr_left = 0, index_sub_arr_right = 0;
+    int index_merged = left;
+    while (index_fsub_arr_left < sub_arr_left && index_sub_arr_right < sub_arr_right)
+    {
+        if (leftArray[index_fsub_arr_left] <= rightArray[index_sub_arr_right])
+        {
+            array[index_merged] = leftArray[index_fsub_arr_left];
+            index_fsub_arr_left++;
+        }
+        else
+        {
+            array[index_merged] = rightArray[index_sub_arr_right];
+            index_sub_arr_right++;
+        }
+        index_merged++;
+    }
+
+    while (index_fsub_arr_left < sub_arr_left)
+    {
+        array[index_merged] = leftArray[index_fsub_arr_left];
+        index_fsub_arr_left++;
+        index_merged++;
+    }
+
+    while (index_sub_arr_right < sub_arr_right)
+    {
+        array[index_merged] = rightArray[index_sub_arr_right];
+        index_sub_arr_right++;
+        index_merged++;
+    }
+    delete[] leftArray;
+    delete[] rightArray;
+}
+
+void MergeSerial::merge_sort(std::vector<int> array, int const begin, int const end)
+{
+    if (begin >= end)
+        return; // Returns recursively
+
+    auto mid = begin + (end - begin) / 2;
+    merge_sort(array, begin, mid);
+    merge_sort(array, mid + 1, end);
+    merge(array, begin, mid, end);
+}
+
+void MergeSerial::sort()
+{
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-serial.txt");
+    auto arr_size = m_file_manager->m_to_sort.size;
+
+    merge_sort(m_file_manager->m_to_sort.m_arr, 0, arr_size - 1);
+
+    delete m_file_manager;
+}

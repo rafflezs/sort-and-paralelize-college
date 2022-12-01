@@ -1,16 +1,26 @@
-#include "./serial/merge.cpp"
+#include "./serial/bubble.hpp"
+#include "./serial/merge.hpp"
+#include "./serial/quick.hpp"
+#include "./serial/select.hpp"
+#include "./helpers/unsorted-generator.hpp"
 
 int main()
 {
-    // int arr[] = {12, 11, 13, 5, 6, 7};
-    // auto arr_size = sizeof(arr) / sizeof(arr[0]);
+    auto gen = new UnsortedGenerator();
+    gen->generate_file(10, 0, 10, 0);
+    delete gen;
 
-    // cout << "Given array is \n";
-    // printArray(arr, arr_size);
+    auto ss = new SelectSerial();
+    ss->sort();
 
-    // mergeSort(arr, 0, arr_size - 1);
+    // auto ms = new MergeSerial();
+    // ms->sort();
+    
+    // auto qs = new QuickSerial();
+    // qs->sort();
+    
+    // auto bs = new BubbleSerial();
+    // bs->sort();
 
-    // cout << "\nSorted array is \n";
-    // printArray(arr, arr_size);
-    // return 0;
+    return 0;
 }
