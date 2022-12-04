@@ -1,12 +1,13 @@
 #include "../helpers/file-manager.hpp"
+#include <omp.h>
 
-class QuickSerial
+class QuickOMP
 {
 public:
     FileManager *m_file_manager;
 
-    QuickSerial();
-    ~QuickSerial();
+    QuickOMP();
+    ~QuickOMP();
 
     void sort();
     void swap(int *a, int *b);
@@ -14,25 +15,25 @@ public:
     void quick_sort(int *arr, int low, int high);
 };
 
-QuickSerial::QuickSerial()
+QuickOMP::QuickOMP()
 {
     std::cout << "Gerando arquivo" << std::endl;
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-quick-serial.txt");
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-quick-omp.txt");
 }
 
-QuickSerial::~QuickSerial()
+QuickOMP::~QuickOMP()
 {
     delete m_file_manager;
 }
 
-void QuickSerial::swap(int *a, int *b)
+void QuickOMP::swap(int *a, int *b)
 {
     int t = *a;
     *a = *b;
     *b = t;
 }
 
-int QuickSerial::partition(int *arr, int low, int high)
+int QuickOMP::partition(int *arr, int low, int high)
 {
     int pivot = arr[high];
     int i = (low - 1);
@@ -49,21 +50,38 @@ int QuickSerial::partition(int *arr, int low, int high)
     return (i + 1);
 }
 
-void QuickSerial::quick_sort(int *arr, int low, int high)
+void QuickOMP::quick_sort(int *arr, int low, int high)
 {
     if (low < high)
     {
         int pi = partition(arr, low, high);
-
-        quick_sort(arr, low, pi - 1);
-        quick_sort(arr, pi + 1, high);
+        #pragma omp task firstprivate(arr, low, pi) 
+        {
+            quick_sort(arr, low, pi - 1);
+        }
+        {
+            quick_sort(arr, pi + 1, high);
+        }
     }
 }
 
 // Driver Code
-void QuickSerial::sort()
+void QuickOMP::sort()
 {
-    std::cout << "Iniciando ordenação - Quick Sort" << std::endl;
 
-    quick_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
+    std::cout << "Iniciando ordenação - Quick Sort (OpenMP)" << std::endl;
+
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-quick-omp.txt");
+    
+    #pragma omp parallel
+    {
+        int id = omp_get_thread_num();
+        int nthrds = omp_get_num_threads();
+        #pragma omp single nowait
+        {
+            quick_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
+        }
+    }
+
+    delete m_file_manager;
 }

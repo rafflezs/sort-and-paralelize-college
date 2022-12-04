@@ -1,90 +1,96 @@
 #include "../helpers/file-manager.hpp"
 
-class MergeSerial
+class MergeOMP
 {
 public:
     FileManager *m_file_manager;
 
-    MergeSerial();
-    ~MergeSerial();
+    MergeOMP();
+    ~MergeOMP();
 
     void sort();
-    void merge(int *array, int const left, int const mid, int const right);
-    void merge_sort(int *array, int const begin, int const end);
+    void merge(int *t_arr, int n, int *tmp);
+    void merge_sort(int *t_arr, int n, int *tmp);
 };
 
-MergeSerial::MergeSerial()
+MergeOMP::MergeOMP()
 {
     std::cout << "Gerando arquivo" << std::endl;
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-serial.txt");
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-omp.txt");
 }
 
-MergeSerial::~MergeSerial()
+MergeOMP::~MergeOMP()
 {
     delete m_file_manager;
 }
 
-void MergeSerial::merge(int *array, int const left, int const mid, int const right)
+void MergeOMP::merge(int *t_arr, int n, int *tmp)
 {
-    auto const sub_arr_left = mid - left + 1;
-    auto const sub_arr_right = right - mid;
-
-    auto leftArray = new int[sub_arr_left],
-         rightArray = new int[sub_arr_right];
-
-    for (auto i = 0; i < sub_arr_left; i++)
-        leftArray[i] = array[left + i];
-    for (auto j = 0; j < sub_arr_right; j++)
-        rightArray[j] = array[mid + 1 + j];
-
-    auto index_fsub_arr_left = 0, index_sub_arr_right = 0;
-    int index_merged = left;
-    while (index_fsub_arr_left < sub_arr_left && index_sub_arr_right < sub_arr_right)
+    int i = 0;
+    int j = n / 2;
+    int ti = 0;
+    // i will iterate till first  half anf J will iterate for 2nd half of array
+    while (i < n / 2 && j < n)
     {
-        if (leftArray[index_fsub_arr_left] <= rightArray[index_sub_arr_right])
+        if (t_arr[i] < t_arr[j])
         {
-            array[index_merged] = leftArray[index_fsub_arr_left];
-            index_fsub_arr_left++;
+            tmp[ti] = t_arr[i];
+            ti++;
+            i++;
         }
         else
         {
-            array[index_merged] = rightArray[index_sub_arr_right];
-            index_sub_arr_right++;
+            tmp[ti] = t_arr[j];
+            ti++;
+            j++;
         }
-        index_merged++;
     }
-
-    while (index_fsub_arr_left < sub_arr_left)
-    {
-        array[index_merged] = leftArray[index_fsub_arr_left];
-        index_fsub_arr_left++;
-        index_merged++;
+    while (i < n / 2)
+    { /* finish up lower half */
+        tmp[ti] = t_arr[i];
+        ti++;
+        i++;
     }
-
-    while (index_sub_arr_right < sub_arr_right)
-    {
-        array[index_merged] = rightArray[index_sub_arr_right];
-        index_sub_arr_right++;
-        index_merged++;
+    while (j < n)
+    { /* finish up upper half */
+        tmp[ti] = t_arr[j];
+        ti++;
+        j++;
     }
-    delete[] leftArray;
-    delete[] rightArray;
+    // Copy sorted array tmp back to  t_arr (Original array)
+    memcpy(t_arr, tmp, n * sizeof(int));
 }
 
-void MergeSerial::merge_sort(int *array, int const begin, int const end)
+void MergeOMP::merge_sort(int *t_arr, int n, int *tmp)
 {
-    if (begin >= end)
-        return; // Returns recursively
+    if (n < 2)
+        return;
 
-    auto mid = begin + (end - begin) / 2;
-    merge_sort(array, begin, mid);
-    merge_sort(array, mid + 1, end);
-    merge(array, begin, mid, end);
+#pragma omp task firstprivate(t_arr, n, tmp)
+    merge_sort(t_arr, n / 2, tmp);
+
+#pragma omp task firstprivate(t_arr, n, tmp)
+    merge_sort(t_arr + (n / 2), n - (n / 2), tmp);
+
+// Wait for both paralel tasks to complete execution
+#pragma omp taskwait
+
+    /* merge sorted halves into sorted list */
+    merge(t_arr, n, tmp);
 }
 
-void MergeSerial::sort()
+void MergeOMP::sort()
 {
-    std::cout << "Iniciando ordenação - Merge Sort" << std::endl;
+    std::cout << "Iniciando ordenação - Merge Sort (OpenMP)" << std::endl;
 
-    merge_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-omp.txt");
+
+    int tmp[m_file_manager->m_vec.size()];
+#pragma omp parallel
+    {
+#pragma omp single
+        merge_sort(m_file_manager->m_arr, m_file_manager->m_vec.size(), tmp);
+    }
+
+    delete m_file_manager;
 }

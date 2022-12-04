@@ -12,15 +12,25 @@ int main()
 
     auto ms = new MergeSerial();
     ms->sort();
-    
+
     auto qs = new QuickSerial();
     qs->sort();
-    
+
     auto bs = new BubbleSerial();
     bs->sort();
 
     auto bomp = new BubbleOMP();
     bomp->sort();
+
+    auto momp = new MergeOMP();
+    momp->sort();
+
+    auto qomp = new QuickOMP();
+    qomp->sort();
+
+    auto somp = new SelectOMP();
+    somp->sort();
+    delete somp;
 
     return 0;
 }

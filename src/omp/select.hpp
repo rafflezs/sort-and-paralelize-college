@@ -1,57 +1,70 @@
 #include "../helpers/file-manager.hpp"
 
-class SelectSerial
+class SelectOMP
 {
 public:
     FileManager *m_file_manager{nullptr};
+    typedef struct compare
+    {
+        int val;
+        int index;
+    } Compare;
 
-    SelectSerial();
-    ~SelectSerial();
+    #pragma omp declare reduction(maximum:Compare:omp_out = omp_in.val > omp_out.val ? omp_in : omp_out)
+
+    SelectOMP();
+    ~SelectOMP();
 
     void sort();
     void swap(int *a, int *b);
     void selection_sort(int *arr, int n);
 };
 
-SelectSerial::SelectSerial()
+SelectOMP::SelectOMP()
 {
     std::cout << "Gerando arquivo" << std::endl;
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-select-serial.txt");
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-select-omp.txt");
 }
 
-SelectSerial::~SelectSerial()
+SelectOMP::~SelectOMP()
 {
     delete m_file_manager;
 }
 
-void SelectSerial::selection_sort(int *arr, int n)
+void SelectOMP::selection_sort(int *arr, int n)
 {
-    int i, j, min_idx;
-
-    for (i = 0; i < n - 1; i++)
+    for (int i = n - 1; i > 0; --i)
     {
-        min_idx = i;
-        for (j = i + 1; j < n; j++)
-            if (arr[j] < arr[min_idx])
-                min_idx = j;
-
-        if (min_idx != i)
-            swap(&arr[min_idx], &arr[i]);
+        Compare max;
+        max.val = arr[i];
+        max.index = i;
+        #pragma omp parallel for reduction(maximum:max)
+        for (int j = i - 1; j >= 0; --j)
+        {
+            if (arr[j] > max.val)
+            {
+                max.val = arr[j];
+                max.index = j;
+            }
+        }
+        
+        int tmp = arr[i];
+        arr[i] = max.val;
+        arr[max.index] = tmp;
     }
 }
 
-void SelectSerial::swap(int *a, int *b)
+void SelectOMP::swap(int *a, int *b)
 {
     int t = *a;
     *a = *b;
     *b = t;
 }
 
-void SelectSerial::sort()
+void SelectOMP::sort()
 {
 
-    std::cout << "Iniciando ordenação - Select Sort" << std::endl;
+    std::cout << "Iniciando ordenação - Select Sort (OpenMP)" << std::endl;
 
     selection_sort(m_file_manager->m_arr, m_file_manager->m_vec.size());
-
 }
