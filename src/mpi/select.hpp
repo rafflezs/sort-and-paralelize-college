@@ -52,9 +52,6 @@ void SelectSerial::sort()
 
     std::cout << "Iniciando ordenação - Select Sort" << std::endl;
 
-    // m_file_manager->print_array();
-
     selection_sort(m_file_manager->m_arr, m_file_manager->m_vec.size());
 
-    // m_file_manager->print_array();
 }

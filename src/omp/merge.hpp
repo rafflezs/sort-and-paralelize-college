@@ -4,10 +4,25 @@ class MergeSerial
 {
 public:
     FileManager *m_file_manager;
+
+    MergeSerial();
+    ~MergeSerial();
+
     void sort();
     void merge(int *array, int const left, int const mid, int const right);
     void merge_sort(int *array, int const begin, int const end);
 };
+
+MergeSerial::MergeSerial()
+{
+    std::cout << "Gerando arquivo" << std::endl;
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-serial.txt");
+}
+
+MergeSerial::~MergeSerial()
+{
+    delete m_file_manager;
+}
 
 void MergeSerial::merge(int *array, int const left, int const mid, int const right)
 {
@@ -69,12 +84,7 @@ void MergeSerial::merge_sort(int *array, int const begin, int const end)
 
 void MergeSerial::sort()
 {
-
     std::cout << "Iniciando ordenação - Merge Sort" << std::endl;
 
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-serial.txt");
-
     merge_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
-
-    delete m_file_manager;
 }

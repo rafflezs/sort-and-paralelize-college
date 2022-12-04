@@ -1,8 +1,4 @@
-#include "./serial/bubble.hpp"
-#include "./serial/merge.hpp"
-#include "./serial/quick.hpp"
-#include "./serial/select.hpp"
-#include "./helpers/unsorted-generator.hpp"
+#include "./public/includes.hpp"
 
 int main()
 {
@@ -14,14 +10,17 @@ int main()
     ss->sort();
     delete ss;
 
-    // auto ms = new MergeSerial();
-    // ms->sort();
+    auto ms = new MergeSerial();
+    ms->sort();
     
-    // auto qs = new QuickSerial();
-    // qs->sort();
+    auto qs = new QuickSerial();
+    qs->sort();
     
-    // auto bs = new BubbleSerial();
-    // bs->sort();
+    auto bs = new BubbleSerial();
+    bs->sort();
+
+    auto bomp = new BubbleOMP();
+    bomp->sort();
 
     return 0;
 }
