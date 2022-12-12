@@ -92,5 +92,4 @@ void MergeOMP::sort()
         merge_sort(m_file_manager->m_arr, m_file_manager->m_vec.size(), tmp);
     }
 
-    delete m_file_manager;
 }

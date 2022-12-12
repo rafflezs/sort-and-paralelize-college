@@ -71,5 +71,4 @@ void BubbleOMP::sort()
 
     bubble_sort(m_file_manager->m_arr, m_file_manager->m_vec.size());
 
-    delete m_file_manager;
 }

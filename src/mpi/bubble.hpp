@@ -1,40 +1,82 @@
 #include "../helpers/file-manager.hpp"
+#include "mpi.h"
 
-class BubbleSerial
+class BubbleMPI
 {
 public:
     FileManager *m_file_manager;
 
-    BubbleSerial();
-    ~BubbleSerial();
+    BubbleMPI();
+    ~BubbleMPI();
 
-    void sort();
-    void bubble_sort(int *t_arr, int t_size);
+    void sort(int argc, char **argv);
+    void bubble_sort(int argc, char **argv, int *t_arr, int t_size);
 };
 
-BubbleSerial::BubbleSerial()
+BubbleMPI::BubbleMPI()
 {
     std::cout << "Gerando arquivo" << std::endl;
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-bubble-serial.txt");
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-bubble-mpi.txt");
 }
 
-BubbleSerial::~BubbleSerial()
+BubbleMPI::~BubbleMPI()
 {
     delete m_file_manager;
 }
 
-void BubbleSerial::bubble_sort(int *t_arr, int t_size)
+void BubbleMPI::bubble_sort(int argc, char **argv, int *t_arr, int t_size)
 {
-    int i, j;
-    for (i = 0; i < t_size - 1; i++)
-        for (j = 0; j < t_size - i - 1; j++)
-            if (t_arr[j] > t_arr[j + 1])
-                std::swap(t_arr[j], t_arr[j + 1]);
+    int size, rank;
+    int *c = t_arr;
+    int aa[t_size], cc[t_size];
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    MPI_Scatter(t_arr, t_size / size, MPI_INT, aa, t_size / size, MPI_INT, 0, MPI_COMM_WORLD);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    int n = t_size / size;
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = 0; j < n - i - 1; j++)
+        {
+            if (aa[j] > aa[j + 1])
+            {
+                int temp = aa[j];
+                aa[j] = aa[j + 1];
+                aa[j + 1] = temp;
+            }
+        }
+    }
+    for (int i = 0; i < n; i++)
+    {
+        cc[i] = aa[i];
+    };
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Gather(cc, t_size / size, MPI_INT, c, t_size / size, MPI_INT, 0, MPI_COMM_WORLD);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
+    std::cout << cc[9];
+    if (rank == 0)
+    {
+        std::cout << "C is look like : " << std::endl;
+        for (int i = 0; i < t_size; i++)
+        {
+            std::cout << c[i] << "   ";
+        }
+    }
 }
 
-void BubbleSerial::sort()
+void BubbleMPI::sort(int argc, char **argv)
 {
-    std::cout << "Iniciando ordenação - Bubble Sort" << std::endl;
+    std::cout << "Iniciando ordenação - Bubble Sort (OpenMP)" << std::endl;
 
-    bubble_sort(m_file_manager->m_arr, m_file_manager->m_vec.size());
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-bubble-mpi.txt");
+
+    bubble_sort(argc, argv, m_file_manager->m_arr, m_file_manager->m_vec.size());
 }

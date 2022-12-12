@@ -7,7 +7,6 @@
 #include "../serial/quick.hpp"
 #include "../omp/quick.hpp"
 
-#include "../serial/select.hpp"
-#include "../omp/select.hpp"
+
 
 #include "../helpers/unsorted-generator.hpp"

@@ -83,5 +83,4 @@ void QuickOMP::sort()
         }
     }
 
-    delete m_file_manager;
 }

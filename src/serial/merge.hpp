@@ -76,5 +76,4 @@ void MergeSerial::sort()
 
     merge_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
 
-    delete m_file_manager;
 }

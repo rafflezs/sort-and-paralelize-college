@@ -1,90 +1,162 @@
 #include "../helpers/file-manager.hpp"
+#include <mpi.h>
 
-class MergeSerial
+class MergeMPI
 {
 public:
     FileManager *m_file_manager;
 
-    MergeSerial();
-    ~MergeSerial();
+    MergeMPI();
+    ~MergeMPI();
 
-    void sort();
-    void merge(int *array, int const left, int const mid, int const right);
-    void merge_sort(int *array, int const begin, int const end);
+    void sort(int argc, char **argv);
+    int *merge(int *First, int Fsize, int *Second, int Ssize);
+    void merge_sort(int *Arr, int start, int end);
 };
 
-MergeSerial::MergeSerial()
+MergeMPI::MergeMPI()
 {
     std::cout << "Gerando arquivo" << std::endl;
-    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-serial.txt");
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-mpi.txt");
 }
 
-MergeSerial::~MergeSerial()
+MergeMPI::~MergeMPI()
 {
     delete m_file_manager;
 }
 
-void MergeSerial::merge(int *array, int const left, int const mid, int const right)
+int *MergeMPI::merge(int *First, int Fsize, int *Second, int Ssize)
 {
-    auto const sub_arr_left = mid - left + 1;
-    auto const sub_arr_right = right - mid;
+    int fi = 0, si = 0, mi = 0, i;
+    int *merged;
+    int Msize = Fsize + Ssize;
 
-    auto leftArray = new int[sub_arr_left],
-         rightArray = new int[sub_arr_right];
-
-    for (auto i = 0; i < sub_arr_left; i++)
-        leftArray[i] = array[left + i];
-    for (auto j = 0; j < sub_arr_right; j++)
-        rightArray[j] = array[mid + 1 + j];
-
-    auto index_fsub_arr_left = 0, index_sub_arr_right = 0;
-    int index_merged = left;
-    while (index_fsub_arr_left < sub_arr_left && index_sub_arr_right < sub_arr_right)
+    merged = (int *)malloc(Msize * sizeof(int));
+    while ((fi < Fsize) && (si < Ssize))
     {
-        if (leftArray[index_fsub_arr_left] <= rightArray[index_sub_arr_right])
+        if (First[fi] <= Second[si])
         {
-            array[index_merged] = leftArray[index_fsub_arr_left];
-            index_fsub_arr_left++;
+            merged[mi] = First[fi];
+            mi++;
+            fi++;
         }
         else
         {
-            array[index_merged] = rightArray[index_sub_arr_right];
-            index_sub_arr_right++;
+            merged[mi] = Second[si];
+            mi++;
+            si++;
         }
-        index_merged++;
     }
 
-    while (index_fsub_arr_left < sub_arr_left)
-    {
-        array[index_merged] = leftArray[index_fsub_arr_left];
-        index_fsub_arr_left++;
-        index_merged++;
-    }
+    if (fi >= Fsize)
+        for (i = mi; i < Msize; i++, si++)
+            merged[i] = Second[si];
+    else if (si >= Ssize)
+        for (i = mi; i < Msize; i++, fi++)
+            merged[i] = First[fi];
 
-    while (index_sub_arr_right < sub_arr_right)
-    {
-        array[index_merged] = rightArray[index_sub_arr_right];
-        index_sub_arr_right++;
-        index_merged++;
-    }
-    delete[] leftArray;
-    delete[] rightArray;
+    for (i = 0; i < Fsize; i++)
+        First[i] = merged[i];
+    for (i = 0; i < Ssize; i++)
+        Second[i] = merged[Fsize + i];
+
+    return merged;
 }
 
-void MergeSerial::merge_sort(int *array, int const begin, int const end)
+void MergeMPI::merge_sort(int *Arr, int start, int end)
 {
-    if (begin >= end)
-        return; // Returns recursively
+    int *sortedArr;
+    int mid = (start + end) / 2;
+    int leftCount = mid - start + 1;
+    int rightCount = end - mid;
 
-    auto mid = begin + (end - begin) / 2;
-    merge_sort(array, begin, mid);
-    merge_sort(array, mid + 1, end);
-    merge(array, begin, mid, end);
+    /* If the range consists of a single element, it's already sorted */
+    if (end == start)
+    {
+        return;
+    }
+    else
+    {
+        /* sort the left half */
+        merge_sort(Arr, start, mid);
+        /* sort the right half */
+        merge_sort(Arr, mid + 1, end);
+        /* merge the two halves */
+        sortedArr = merge(Arr + start, leftCount, Arr + mid + 1, rightCount);
+    }
 }
 
-void MergeSerial::sort()
+void MergeMPI::sort(int argc, char **argv)
 {
     std::cout << "Iniciando ordenação - Merge Sort" << std::endl;
+    m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-mpi.txt");
 
-    merge_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
+    int *data = m_file_manager->m_arr;
+    int *local_data;
+    int *otherArr;
+    int q, n = m_file_manager->m_vec.size();
+    int my_rank, comm_sz;
+    int local_n = 0;
+    int i;
+    int step;
+    MPI_Status status;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+
+    if (my_rank == 0)
+    {
+        int r;
+        local_n = n / comm_sz;
+        r = n % comm_sz;
+        int size = n + local_n - r;
+
+        if (r != 0)
+        {
+            for (i = n; i < size; i++)
+                data[i] = 0;
+            local_n = local_n + 1;
+        }
+
+        // Print unsorted data
+        MPI_Bcast(&local_n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        local_data = (int *)malloc(local_n * sizeof(int));
+        MPI_Scatter(data, local_n, MPI_INT, local_data, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+        merge_sort(local_data, 0, local_n - 1);
+    }
+    else
+    {
+        MPI_Bcast(&local_n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        local_data = (int *)malloc(local_n * sizeof(int));
+        MPI_Scatter(data, local_n, MPI_INT, local_data, local_n, MPI_INT, 0, MPI_COMM_WORLD);
+        merge_sort(local_data, 0, local_n - 1);
+    }
+
+    // Print sorted data per processor
+    step = 1;
+    while (step < comm_sz)
+    {
+        if (my_rank % (2 * step) == 0)
+        {
+            if (my_rank + step < comm_sz)
+            {
+                MPI_Recv(&q, 1, MPI_INT, my_rank + step, 0, MPI_COMM_WORLD, &status);
+                otherArr = (int *)malloc(q * sizeof(int));
+                MPI_Recv(otherArr, q, MPI_INT, my_rank + step, 0, MPI_COMM_WORLD, &status);
+                local_data = merge(local_data, local_n, otherArr, q);
+                local_n = local_n + q;
+            }
+        }
+        else
+        {
+            int dest = my_rank - step;
+            MPI_Send(&local_n, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(local_data, local_n, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            break;
+        }
+        step = step * 2;
+    }
+
+    MPI_Finalize();
 }
