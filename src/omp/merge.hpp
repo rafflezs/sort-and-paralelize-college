@@ -85,6 +85,9 @@ void MergeOMP::sort()
 
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-omp.txt");
 
+    double start, stop;
+    start = clock();
+
     int tmp[m_file_manager->m_vec.size()];
 #pragma omp parallel
     {
@@ -92,4 +95,6 @@ void MergeOMP::sort()
         merge_sort(m_file_manager->m_arr, m_file_manager->m_vec.size(), tmp);
     }
 
+    stop = clock();
+    printf("Merge OpenMP - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
 }

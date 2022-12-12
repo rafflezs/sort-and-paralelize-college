@@ -26,6 +26,8 @@ BubbleMPI::~BubbleMPI()
 
 void BubbleMPI::bubble_sort(int argc, char **argv, int *t_arr, int t_size)
 {
+    double start, stop;
+    start = clock();
     int size, rank;
     int *c = t_arr;
     int aa[t_size], cc[t_size];
@@ -56,20 +58,15 @@ void BubbleMPI::bubble_sort(int argc, char **argv, int *t_arr, int t_size)
         cc[i] = aa[i];
     };
 
+    stop = clock();
+    if (rank == 0)
+        printf("Bubble MPI - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
+
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Gather(cc, t_size / size, MPI_INT, c, t_size / size, MPI_INT, 0, MPI_COMM_WORLD);
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
-    std::cout << cc[9];
-    if (rank == 0)
-    {
-        std::cout << "C is look like : " << std::endl;
-        for (int i = 0; i < t_size; i++)
-        {
-            std::cout << c[i] << "   ";
-        }
-    }
 }
 
 void BubbleMPI::sort(int argc, char **argv)

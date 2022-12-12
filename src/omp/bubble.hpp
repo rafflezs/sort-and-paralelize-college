@@ -31,34 +31,34 @@ void BubbleOMP::bubble_sort(int *t_arr, int t_size)
     int nr = 0;
     while (changes)
     {
-        #pragma omp parallel private(tmp)
+#pragma omp parallel private(tmp)
         {
             nr++;
             changes = 0;
-            #pragma omp for reduction(+ \
+#pragma omp for reduction(+ \
                           : changes)
-                for (i = 0; i < t_size - 1; i = i + 2)
+            for (i = 0; i < t_size - 1; i = i + 2)
+            {
+                if (t_arr[i] > t_arr[i + 1])
                 {
-                    if (t_arr[i] > t_arr[i + 1])
-                    {
-                        tmp = t_arr[i];
-                        t_arr[i] = t_arr[i + 1];
-                        t_arr[i + 1] = tmp;
-                        ++changes;
-                    }
+                    tmp = t_arr[i];
+                    t_arr[i] = t_arr[i + 1];
+                    t_arr[i + 1] = tmp;
+                    ++changes;
                 }
-            #pragma omp for reduction(+ \
+            }
+#pragma omp for reduction(+ \
                           : changes)
-                for (i = 1; i < t_size - 1; i = i + 2)
+            for (i = 1; i < t_size - 1; i = i + 2)
+            {
+                if (t_arr[i] > t_arr[i + 1])
                 {
-                    if (t_arr[i] > t_arr[i + 1])
-                    {
-                        tmp = t_arr[i];
-                        t_arr[i] = t_arr[i + 1];
-                        t_arr[i + 1] = tmp;
-                        ++changes;
-                    }
+                    tmp = t_arr[i];
+                    t_arr[i] = t_arr[i + 1];
+                    t_arr[i + 1] = tmp;
+                    ++changes;
                 }
+            }
         }
     }
 }
@@ -69,6 +69,9 @@ void BubbleOMP::sort()
 
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-bubble-omp.txt");
 
+    double start, stop;
+    start = clock();
     bubble_sort(m_file_manager->m_arr, m_file_manager->m_vec.size());
-
+    stop = clock();
+    printf("Bubble OpenMP - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
 }

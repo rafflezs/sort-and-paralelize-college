@@ -55,7 +55,7 @@ void QuickOMP::quick_sort(int *arr, int low, int high)
     if (low < high)
     {
         int pi = partition(arr, low, high);
-        #pragma omp task firstprivate(arr, low, pi) 
+#pragma omp task firstprivate(arr, low, pi)
         {
             quick_sort(arr, low, pi - 1);
         }
@@ -72,15 +72,20 @@ void QuickOMP::sort()
     std::cout << "Iniciando ordenação - Quick Sort (OpenMP)" << std::endl;
 
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-quick-omp.txt");
-    
-    #pragma omp parallel
+
+    double start, stop;
+    start = clock();
+
+#pragma omp parallel
     {
         int id = omp_get_thread_num();
         int nthrds = omp_get_num_threads();
-        #pragma omp single nowait
+#pragma omp single nowait
         {
             quick_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
         }
     }
 
+    stop = clock();
+    printf("Quick OpenMP - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
 }

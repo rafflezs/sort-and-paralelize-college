@@ -6,8 +6,8 @@ public:
     FileManager *m_file_manager;
     void sort();
     void swap(int *a, int *b);
-    int partition(int* t_arr, int low, int high);
-    void quick_sort(int* t_arr, int low, int high);
+    int partition(int *t_arr, int low, int high);
+    void quick_sort(int *t_arr, int low, int high);
 };
 
 void QuickSerial::swap(int *a, int *b)
@@ -17,7 +17,7 @@ void QuickSerial::swap(int *a, int *b)
     *b = t;
 }
 
-int QuickSerial::partition(int* t_arr, int low, int high)
+int QuickSerial::partition(int *t_arr, int low, int high)
 {
     int pivot = t_arr[high];
     int i = (low - 1);
@@ -34,7 +34,7 @@ int QuickSerial::partition(int* t_arr, int low, int high)
     return (i + 1);
 }
 
-void QuickSerial::quick_sort(int* t_arr, int low, int high)
+void QuickSerial::quick_sort(int *t_arr, int low, int high)
 {
     if (low < high)
     {
@@ -53,6 +53,11 @@ void QuickSerial::sort()
 
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-quick-serial.txt");
 
+    double start, stop;
+    start = clock();
     quick_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
+    stop = clock();
+    printf("Quick Serial - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
 
+    delete m_file_manager;
 }

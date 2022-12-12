@@ -114,6 +114,10 @@ void QuickMPI::sort(int argc, char **argv)
     std::cout << "Iniciando ordenação - Quick Sort" << std::endl;
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-quick-mpi.txt");
 
+    double start, stop;
+
+    start = clock();
+
     int number_of_elements = m_file_manager->m_vec.size();
     int *data = NULL;
     int chunk_size, own_chunk_size;
@@ -152,7 +156,6 @@ void QuickMPI::sort(int argc, char **argv)
 
     // Blocks all process until reach this point
     MPI_Barrier(MPI_COMM_WORLD);
-
 
     // BroadCast the Size to all the
     // process from root process
@@ -226,7 +229,9 @@ void QuickMPI::sort(int argc, char **argv)
         }
     }
 
-
+    stop = clock();
+    if (rank_of_process == 0)
+        printf("Quick MPI - Tempo gasto: %.2f\n\n", (stop - start) / CLOCKS_PER_SEC);
 
     MPI_Finalize();
 }

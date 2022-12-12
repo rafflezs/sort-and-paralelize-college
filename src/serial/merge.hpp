@@ -74,6 +74,12 @@ void MergeSerial::sort()
 
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-serial.txt");
 
+    double start, stop;
+    start = clock();
     merge_sort(m_file_manager->m_arr, 0, m_file_manager->m_vec.size() - 1);
+    stop = clock();
+    printf("Merge Serial - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
+
+    delete m_file_manager;
 
 }

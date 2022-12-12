@@ -91,6 +91,10 @@ void MergeMPI::sort(int argc, char **argv)
     std::cout << "Iniciando ordenação - Merge Sort" << std::endl;
     m_file_manager = new FileManager("../data/unsort-input.txt", "../data/sorted-merge-mpi.txt");
 
+    double start, stop;
+
+    start = clock();
+
     int *data = m_file_manager->m_arr;
     int *local_data;
     int *otherArr;
@@ -157,6 +161,10 @@ void MergeMPI::sort(int argc, char **argv)
         }
         step = step * 2;
     }
+
+    stop = clock();
+    if (my_rank == 0)
+        printf("Merge MPI - Tempo gasto: %f\n\n", (stop - start) / CLOCKS_PER_SEC);
 
     MPI_Finalize();
 }
